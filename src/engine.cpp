@@ -9,7 +9,7 @@ namespace engine {
 
     void Engine::append_message(uint8_t *data, size_t length, uint8_t role) {
         messages_.emplace_back(messages_.size(), static_cast<uint32_t>(length), role);
-        auto& msg = messages_.back();
+        auto &msg = messages_.back();
         if (chunks_.empty()) {
             chunks_.emplace_back(0);
         }
@@ -28,9 +28,25 @@ namespace engine {
         size_t end = std::min(start + count, messages_.size());
         window.reserve(end - start);
         for (size_t i = start; i < end; i++) {
-            const auto& msg = messages_[i];
-            const auto& cur_chunk = clock_cache_.get(msg.chunk_id_);
+            const auto &msg = messages_[i];
+            const auto &cur_chunk = clock_cache_.get(msg.chunk_id_);
             window.push_back(cur_chunk->get_message_data(msg));
+        }
+
+        return window;
+    }
+
+    std::vector<std::span<const uint8_t>> Engine::get_window_span(size_t start, size_t count) {
+
+        size_t end = std::min(start + count, messages_.size());
+
+        std::vector<std::span<const uint8_t>> window;
+        window.reserve(end - start);
+
+        for (size_t i = start; i < end; i++) {
+            const auto &msg = messages_[i];
+            const auto &chunk = clock_cache_.get(msg.chunk_id_);
+            window.push_back(chunk->get_message_span(msg));
         }
 
         return window;

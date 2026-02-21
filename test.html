@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Chronos Virtualized Chat</title>
+
+    <style>
+        #viewport {
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            position: relative;
+            font-family: monospace;
+        }
+
+        #spacer {
+            width: 1px;
+        }
+
+        #items {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .msg {
+            height: 24px;
+            padding: 4px;
+            box-sizing: border-box;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+
+<body>
+
+<h3>Chronos Virtualized Chat</h3>
+
+<div id="viewport">
+    <div id="spacer"></div>
+    <div id="items"></div>
+</div>
+
+<script>
+    var Module = {
+        onRuntimeInitialized() {
+
+            const append = Module.cwrap("append_message", null, ["number","number","number"]);
+            const getPacked = Module.cwrap("get_window_packed", "number", ["number","number","number","number"]);
+            const freeBuf = Module.cwrap("free_buffer", null, ["number"]);
+
+            function appendStr(s) {
+                const bytes = new TextEncoder().encode(s);
+                const ptr = Module._malloc(bytes.length);
+                Module.HEAPU8.set(bytes, ptr);
+                append(ptr, bytes.length, 0);
+                Module._free(ptr);
+            }
+
+            const TOTAL = 100000;
+            for (let i = 0; i < TOTAL; i++) {
+                appendStr("Message #" + i);
+            }
+
+            function decodeWindow(start, count) {
+                const totalPtr = Module._malloc(8);
+                const countPtr = Module._malloc(8);
+
+                const buf = getPacked(start, count, totalPtr, countPtr);
+                const n = Module.HEAPU32[countPtr >> 2];
+
+                if (!buf || n === 0) return [];
+
+                const offsetsBase = buf + 4;
+                const sizesBase = offsetsBase + 4 * n;
+                const payloadBase = sizesBase + 4 * n;
+
+                const out = [];
+                for (let i = 0; i < n; i++) {
+                    const off = Module.HEAPU32[(offsetsBase >> 2) + i];
+                    const sz  = Module.HEAPU32[(sizesBase >> 2) + i];
+                    const bytes = Module.HEAPU8.slice(payloadBase + off, payloadBase + off + sz);
+                    out.push(new TextDecoder().decode(bytes));
+                }
+
+                freeBuf(buf);
+                Module._free(totalPtr);
+                Module._free(countPtr);
+                return out;
+            }
+
+            const viewport = document.getElementById("viewport");
+            const spacer = document.getElementById("spacer");
+            const items = document.getElementById("items");
+
+            const ROW_HEIGHT = 24;
+            const WINDOW = 80;
+
+            spacer.style.height = TOTAL * ROW_HEIGHT + "px";
+
+            function render(start) {
+                const msgs = decodeWindow(start, WINDOW);
+                items.style.transform = `translateY(${start * ROW_HEIGHT}px)`;
+                items.innerHTML = "";
+
+                for (const m of msgs) {
+                    const div = document.createElement("div");
+                    div.className = "msg";
+                    div.textContent = m;
+                    items.appendChild(div);
+                }
+            }
+
+            render(0);
+
+            viewport.addEventListener("scroll", () => {
+                const start = Math.floor(viewport.scrollTop / ROW_HEIGHT);
+
+                // render visible
+                render(start);
+
+                // prefetch next
+                decodeWindow(start + WINDOW, WINDOW);
+
+                // prefetch previous (safe clamp)
+                if (start >= WINDOW) {
+                    decodeWindow(start - WINDOW, WINDOW);
+                }
+            });
+        }
+    };
+</script>
+
+<script src="chronos-extension/chronos.js"></script>
+</body>
+</html>

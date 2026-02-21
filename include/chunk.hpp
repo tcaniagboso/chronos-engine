@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <array>
+#include <span>
 
 #include "message.hpp"
 static constexpr int CHUNK_CAPACITY = 256 * 1024;
@@ -23,21 +24,28 @@ namespace chunk {
 
         bool add_message(uint8_t* data, message::Message& msg) {
             size_t chunk_size = buffer_.size();
-            if (chunk_size + msg.length > CHUNK_CAPACITY && chunk_size > 0) return false;
+            if (chunk_size + msg.length_ > CHUNK_CAPACITY && chunk_size > 0) return false;
             if (chunk_size == 0) {
                 chunk_start_ = msg.id_;
             }
             msg.offset_ = static_cast<uint32_t>(chunk_size);
             msg.chunk_id_ = id_;
-            buffer_.insert(buffer_.end(), data, data + msg.length);
+            buffer_.insert(buffer_.end(), data, data + msg.length_);
             chunk_end_ = msg.id_;
             return true;
+        }
+
+        [[nodiscard]] std::span<const uint8_t> get_message_span(const message::Message& msg) const {
+            return {
+                buffer_.data() + msg.offset_,
+                msg.length_
+            };
         }
 
         std::vector<uint8_t> get_message_data(const message::Message& msg) {
             std::vector<uint8_t> data(
                     buffer_.begin() + msg.offset_,
-                    buffer_.begin() + msg.offset_ + msg.length
+                    buffer_.begin() + msg.offset_ + msg.length_
             );
 
             return data;

@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(chronos_engine
         src/cache.cpp
         src/engine.cpp
+        src/wasm_api.cpp
 )
 
 target_include_directories(chronos_engine

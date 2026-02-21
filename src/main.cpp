@@ -6,7 +6,7 @@
 
 #include "engine.hpp"
 
-void print_test(const std::string& name, bool pass) {
+void print_test(const std::string &name, bool pass) {
     std::cout << (pass ? "[PASSED] " : "[FAILED] ") << name << "\n";
 }
 
@@ -17,9 +17,9 @@ bool test_basic_append() {
             "Hello", "World", "Chronos", "Engine"
     };
 
-    for (auto& m : msgs) {
+    for (auto &m: msgs) {
         e.append_message(
-                reinterpret_cast<uint8_t*>(m.data()),
+                reinterpret_cast<uint8_t *>(m.data()),
                 m.size(),
                 0
         );
@@ -44,7 +44,7 @@ bool test_chunk_rollover() {
 
     for (int i = 0; i < 1000; i++) {
         e.append_message(
-                reinterpret_cast<uint8_t*>(big.data()),
+                reinterpret_cast<uint8_t *>(big.data()),
                 big.size(),
                 0
         );
@@ -54,7 +54,7 @@ bool test_chunk_rollover() {
 
     if (window.size() != 10) return false;
 
-    for (auto& payload : window) {
+    for (auto &payload: window) {
         std::string out(payload.begin(), payload.end());
         if (out != big) return false;
     }
@@ -68,7 +68,7 @@ bool test_middle_window() {
     for (int i = 0; i < 200; i++) {
         std::string m = "MSG_" + std::to_string(i);
         e.append_message(
-                reinterpret_cast<uint8_t*>(m.data()),
+                reinterpret_cast<uint8_t *>(m.data()),
                 m.size(),
                 0
         );
@@ -93,7 +93,7 @@ bool test_bounds() {
     for (int i = 0; i < 10; i++) {
         std::string m = "B_" + std::to_string(i);
         e.append_message(
-                reinterpret_cast<uint8_t*>(m.data()),
+                reinterpret_cast<uint8_t *>(m.data()),
                 m.size(),
                 0
         );
@@ -111,7 +111,7 @@ bool test_cache_eviction() {
 
     for (int i = 0; i < 2000; i++) {
         e.append_message(
-                reinterpret_cast<uint8_t*>(msg.data()),
+                reinterpret_cast<uint8_t *>(msg.data()),
                 msg.size(),
                 0
         );
@@ -122,7 +122,7 @@ bool test_cache_eviction() {
     auto w3 = e.get_window(1000, 20);
     auto w4 = e.get_window(1500, 20);
 
-    for (auto& payload : w4) {
+    for (auto &payload: w4) {
         std::string out(payload.begin(), payload.end());
         if (out != msg) return false;
     }
@@ -143,7 +143,7 @@ void stress_test() {
 
     for (size_t i = 0; i < MESSAGE_COUNT; i++) {
         e.append_message(
-                reinterpret_cast<uint8_t*>(payload.data()),
+                reinterpret_cast<uint8_t *>(payload.data()),
                 payload.size(),
                 0
         );
@@ -177,6 +177,79 @@ void stress_test() {
               << " ms\n";
 }
 
+void stress_test_compare() {
+    engine::Engine e;
+
+    const size_t MESSAGE_COUNT = 200000;
+    const size_t WINDOW_SIZE = 80;
+
+    std::string payload =
+            "PERF_TEST_MESSAGE_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    // ---- Populate engine ----
+    for (size_t i = 0; i < MESSAGE_COUNT; i++) {
+        e.append_message(
+                reinterpret_cast<uint8_t *>(payload.data()),
+                payload.size(),
+                0
+        );
+    }
+
+    volatile size_t checksum = 0; // prevent optimization
+
+    // -----------------------------
+    // Copy version benchmark
+    // -----------------------------
+    auto start_copy = std::chrono::steady_clock::now();
+
+    for (size_t i = 0; i < 10000; i++) {
+        size_t pos =
+                (i * 137) % (MESSAGE_COUNT - WINDOW_SIZE);
+
+        auto window = e.get_window(pos, WINDOW_SIZE);
+
+        for (auto &msg: window) {
+            checksum += msg.size();
+        }
+    }
+
+    auto end_copy = std::chrono::steady_clock::now();
+    auto copy_time =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                    end_copy - start_copy);
+
+    std::cout << "\nCopy version: "
+              << copy_time.count()
+              << " ms\n";
+
+    // -----------------------------
+    // Span version benchmark
+    // -----------------------------
+    auto start_span = std::chrono::steady_clock::now();
+
+    for (size_t i = 0; i < 10000; i++) {
+        size_t pos =
+                (i * 137) % (MESSAGE_COUNT - WINDOW_SIZE);
+
+        auto window = e.get_window_span(pos, WINDOW_SIZE);
+
+        for (auto &span: window) {
+            checksum += span.size();
+        }
+    }
+
+    auto end_span = std::chrono::steady_clock::now();
+    auto span_time =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                    end_span - start_span);
+
+    std::cout << "Span version: "
+              << span_time.count()
+              << " ms\n";
+
+    std::cout << "Checksum: " << checksum << "\n";
+}
+
 int main() {
 
     print_test("Basic append + window", test_basic_append());
@@ -186,6 +259,7 @@ int main() {
     print_test("Cache eviction stability", test_cache_eviction());
 
     stress_test();
+    stress_test_compare();
 
     std::cout << "\nAll tests finished.\n";
     return 0;

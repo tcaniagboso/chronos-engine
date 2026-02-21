@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <span>
 
 #include "cache.hpp"
 #include "chunk.hpp"
@@ -24,6 +25,7 @@ namespace engine {
 
         void append_message(uint8_t* data, size_t size, uint8_t role);
         std::vector<std::vector<uint8_t>> get_window(size_t start, size_t count);
+        std::vector<std::span<const uint8_t>> get_window_span(size_t start, size_t count);
 
     };
 } // namespace engine

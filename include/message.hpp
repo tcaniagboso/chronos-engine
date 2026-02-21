@@ -10,14 +10,14 @@ namespace message {
         uint64_t id_;
         uint32_t chunk_id_;
         uint32_t offset_;
-        uint32_t length;
+        uint32_t length_;
         uint8_t role_;
 
         Message(uint64_t id, uint32_t length, uint8_t role)
             : id_{id},
               chunk_id_{},
               offset_{},
-              length{length},
+              length_{length},
               role_{role} {}
     };
 

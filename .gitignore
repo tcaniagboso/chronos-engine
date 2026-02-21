@@ -6,3 +6,12 @@ cmake-build-debug/
 
 # idea
 .idea/
+
+# dump
+code_dump/
+
+# emsdk
+emsdk/
+
+# .wasm
+*.wasm
