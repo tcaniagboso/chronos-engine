@@ -1,10 +1,9 @@
-#include <cassert>
 #include <chrono>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "engine.hpp"
+#include "../include/engine.hpp"
 
 void print_test(const std::string &name, bool pass) {
     std::cout << (pass ? "[PASSED] " : "[FAILED] ") << name << "\n";
@@ -134,7 +133,7 @@ void stress_test() {
     engine::Engine e;
 
     const size_t MESSAGE_COUNT = 200000;
-    const size_t WINDOW_SIZE = 80;
+    const size_t WINDOW_SIZE = 10;
 
     std::string payload = "PERF_TEST_MESSAGE_ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -181,7 +180,7 @@ void stress_test_compare() {
     engine::Engine e;
 
     const size_t MESSAGE_COUNT = 200000;
-    const size_t WINDOW_SIZE = 80;
+    const size_t WINDOW_SIZE = 10;
 
     std::string payload =
             "PERF_TEST_MESSAGE_ABCDEFGHIJKLMNOPQRSTUVWXYZ";

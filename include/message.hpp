@@ -3,7 +3,7 @@
 #include <cstdint>
 
 static constexpr uint8_t ROLE_USER = 0;
-static constexpr uint8_t ROLE_SYSTEM = 0;
+static constexpr uint8_t ROLE_SYSTEM = 1;
 
 namespace message {
     struct Message {

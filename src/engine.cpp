@@ -1,4 +1,4 @@
-#include "engine.hpp"
+#include "../include/engine.hpp"
 
 namespace engine {
 
@@ -26,6 +26,7 @@ namespace engine {
     std::vector<std::vector<uint8_t>> Engine::get_window(size_t start, size_t count) {
         std::vector<std::vector<uint8_t>> window{};
         size_t end = std::min(start + count, messages_.size());
+        while (start > 0 && messages_[start].role_ != ROLE_USER) start--;
         window.reserve(end - start);
         for (size_t i = start; i < end; i++) {
             const auto &msg = messages_[i];
@@ -37,9 +38,8 @@ namespace engine {
     }
 
     std::vector<std::span<const uint8_t>> Engine::get_window_span(size_t start, size_t count) {
-
         size_t end = std::min(start + count, messages_.size());
-
+        while (start > 0 && messages_[start].role_ != ROLE_USER) start--;
         std::vector<std::span<const uint8_t>> window;
         window.reserve(end - start);
 

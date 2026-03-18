@@ -3,7 +3,6 @@
   "name": "Chronos History Accelerator",
   "version": "0.1",
   "description": "High-performance virtualized chat history for LLM web apps",
-
   "content_scripts": [
     {
       "matches": [
@@ -11,14 +10,23 @@
         "https://www.chatgpt.com/*",
         "https://chat.openai.com/*"
       ],
-      "js": ["content.js", "chronos.js"]
+      "js": [
+        "content.js"
+      ]
     }
   ],
-
   "web_accessible_resources": [
     {
-      "resources": ["chronos.wasm"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "loader.js",
+        "chronos.js",
+        "chronos_bridge.js",
+        "chronos_app.js",
+        "chronos.wasm"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

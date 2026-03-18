@@ -13,5 +13,5 @@ code_dump/
 # emsdk
 emsdk/
 
-# .wasm
-*.wasm
+.DS_Store
+Thumbs.db
