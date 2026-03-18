@@ -5,6 +5,12 @@ Chronos is a C++ runtime designed to efficiently store, page, cache, and retriev
 
 It uses chunked storage, windowed access, and OS-style cache eviction strategies to deliver constant-time access and smooth traversal even with millions of entries.
 
+## Project Status
+Chronos Engine is under active development.
+
+The core C++ runtime, caching model, window retrieval logic, tests, and initial WebAssembly bindings are implemented.  
+The browser extension frontend is currently experimental and still being optimized for long-chat rendering performance and smooth takeover of existing DOM state.
+
 ## Motivation
 LLM web interfaces degrade rapidly as chat histories grow.
 
@@ -51,18 +57,24 @@ Secondary:
 - event streams
 - long timelines
 
-## Roadmap (MVP)
- - Chunked in-memory message store
- - Append pipeline
- - Window retrieval API
- - CLOCK cache eviction
- - Engine test harness
- - WebAssembly bindings
+## Roadmap
+### Implemented
+- Chunked in-memory message store
+- Append pipeline
+- Window retrieval API
+- CLOCK cache eviction
+- Engine test harness
+- WebAssembly bindings
+
+### In Progress
+- Browser extension frontend
+- DOM takeover and virtualization strategy
+- Long-chat performance tuning
 
 ## Tech Stack
-- Modern C++ (C++17+)
-- WebAssembly (planned)
-- Minimal JavaScript bridge (planned)
+- Modern C++ (C++20)
+- WebAssembly
+- JavaScript browser extension prototype
 
 ## Design Philosophy
 Chronos prioritizes:
